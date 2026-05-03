@@ -1,0 +1,85 @@
+import pygame
+import gui
+from model import Puzzle
+import ida_star as ida
+
+# base setting
+Version = "1.0"
+BOARD_SIZE = 4
+
+# GUI setting
+DISPLAY_SIZE = DISPLAY_WIDTH, DISPLAY_HEIGHT = 900, 500
+screen = pygame.display.set_mode(DISPLAY_SIZE)
+pygame.display.set_caption(f"15 puzzle solver version {Version}")
+FPS = 60
+
+pygame.init()
+gui.init()
+RUNNING = True
+puzzle = Puzzle()
+animating = None
+searching = False
+animate_solution = None
+
+def move_tile(dir, start_pos) : # dir is direction empty
+    global puzzle, animating
+    animating = gui.MoveAnimation(start_pos, dir, puzzle.get_v_at(start_pos))
+    puzzle = puzzle.make_moved(dir)
+
+def handle_solution_process() :
+    global animate_solution, puzzle
+    if not animate_solution : return
+    if animating == None :
+        next_dir = animate_solution.get_next_dir()
+        print(next_dir)
+        if next_dir == None : animate_solution = None
+        else : move_tile(next_dir, animate_solution.get_move_startpos(puzzle.zero))
+
+def find_solution() :
+    global puzzle, searching, animating, animate_solution
+    if puzzle.is_goal() : return
+    searching = True
+    gui.draw(screen, puzzle, animating, animate_solution, searching)
+    solution = ida.ida_star(puzzle)
+    print("found solution : ", solution)
+    animate_solution = gui.SolutionProcess(solution)
+
+def handleInput(event, rects, buttons) :
+    global puzzle, RUNNING, animating
+    mouse_pos = pygame.mouse.get_pos()
+    if event.type == pygame.QUIT : RUNNING = False
+
+    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 :
+        if animating is not None : return
+        for i, rect in rects.items() : # rects = dict
+            if rect.collidepoint(mouse_pos) : 
+                move_dir = puzzle.movable_dir(i)
+                if move_dir != None :
+                    move_tile(move_dir, i)
+                return
+        for i, button in enumerate(buttons) :
+            if button.collidepoint(mouse_pos) :
+                if i == 0 :
+                    puzzle.shuffle_board()
+                if i == 1 :
+                    find_solution()
+    return
+
+# MAIN GAMELOOP
+def GameLoop() :
+    global puzzle, RUNNING, animating, animate_solution
+
+    # Game Loop
+    clock = pygame.time.Clock()
+    while RUNNING :
+        if animate_solution : handle_solution_process()
+
+        rects, buttons, animating = gui.draw(screen, puzzle, animating, animate_solution) # GUI
+
+        for event in pygame.event.get() :
+            handleInput(event, rects, buttons)
+
+        clock.tick(FPS)
+    return
+
+GameLoop()
