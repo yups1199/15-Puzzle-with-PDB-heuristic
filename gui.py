@@ -13,15 +13,21 @@ TILE_TEXT_COLOR = (250, 250, 250)
 
 # Buttons
 BUTTON_COLOR = (0,101,169)
-HOVER_BUTTON_COLOR = 	(0,152,255)
+HOVER_BUTTON_COLOR = (0,152,255)
+DEACTIVATED_BUTTON_COLOR = (53,82,140)
 BUTTON_FONT = None #init()
 BUTTON_TEXT_COLOR = (250, 250, 250)
 SEARCHING_BUTTON_COLOR = (255,188,0)
+BUILD_BUTTON_COLOR = (234,67,53)
+HOVER_BUILD_BUTTON_COLOR = (254,87,73)
+BUILDING_BUTTON_COLOR = (251, 188, 5)
+BUILT_BUTTON_COLOR = (52,168,83)
 BUTTON1_WIDTH = 300
 BUTTON1_HEIGHT = 90
 BUTTON1_Y = 50
 BUTTON1_X = 550
 BUTTON2_Y = 160
+BUTTON3_Y = 360
 
 # TEXT
 SOLUTION_FONT = None #init()
@@ -109,7 +115,7 @@ def draw_pz(screen, pz, animating, pause_hover, mouse_pos) -> dict :
         screen.blit(tile_text, tile_text_rect)
     return rects
 
-def draw_buttons(screen, searching, pause_hover, mouse_pos) -> tuple :
+def draw_buttons(screen, searching, building, pause_hover, mouse_pos) -> tuple :
     # BUTTON 1 rect
     button1 = pygame.Rect(BUTTON1_X, BUTTON1_Y, BUTTON1_WIDTH, BUTTON1_HEIGHT)
     if not pause_hover and button1.collidepoint(mouse_pos) : 
@@ -124,20 +130,39 @@ def draw_buttons(screen, searching, pause_hover, mouse_pos) -> tuple :
 
     # BUTTON 2 rect
     button2 = pygame.Rect(BUTTON1_X, BUTTON2_Y, BUTTON1_WIDTH, BUTTON1_HEIGHT)
-    if searching : b2_color = SEARCHING_BUTTON_COLOR
-    elif not pause_hover and button2.collidepoint(mouse_pos) : 
+    if building != 2 : b2_color = DEACTIVATED_BUTTON_COLOR
+    elif searching : b2_color = SEARCHING_BUTTON_COLOR
+    elif not pause_hover and building == 2 and button2.collidepoint(mouse_pos) : 
         b2_color = HOVER_BUTTON_COLOR
     else : b2_color = BUTTON_COLOR
     pygame.draw.rect(screen, b2_color, button2)
 
     # BUTTON 2 text
-    if searching : b2_str = "searching..."
+    if building != 2 : b2_str = "PDB requied"
+    elif searching : b2_str = "searching..."
     else : b2_str = "find solution"
     b2_text = BUTTON_FONT.render(b2_str, True, BUTTON_TEXT_COLOR)
     b2_text_rect = b2_text.get_rect(center=button2.center)
     screen.blit(b2_text, b2_text_rect)
 
-    return (button1, button2)
+    # BUTTON 3 rect
+    button3 = pygame.Rect(BUTTON1_X, BUTTON3_Y, BUTTON1_WIDTH, BUTTON1_HEIGHT)
+    if building == 1 : b3_color = BUILDING_BUTTON_COLOR
+    elif building == 2 : b3_color = BUILT_BUTTON_COLOR
+    elif not pause_hover and button3.collidepoint(mouse_pos) :
+        b3_color = HOVER_BUILD_BUTTON_COLOR
+    else : b3_color = BUILD_BUTTON_COLOR
+    pygame.draw.rect(screen, b3_color, button3)
+
+    # Button 3 text
+    if building == 1 : b3_str = "building..."
+    elif building == 2 : b3_str = "PDB ready"
+    else : b3_str = "build PDB"
+    b3_text = BUTTON_FONT.render(b3_str, True, BUTTON_TEXT_COLOR)
+    b3_text_rect = b3_text.get_rect(center=button3.center)
+    screen.blit(b3_text, b3_text_rect)
+
+    return (button1, button2, button3)
 
 def draw_anim(screen, animating) -> bool :
     tile_rect = animating.get_tile_rect()
@@ -152,7 +177,7 @@ def draw_text(screen, sol) :
     solution_text = SOLUTION_FONT.render(solution_str, True, SOLUTION_TEXT_COLOR)
     screen.blit(solution_text, SOL_TEXT_POS)
 
-def draw(screen, pz, animating, sol, searching = False) : # -> dict, tuple, MoveAnimation
+def draw(screen, pz, animating, sol, searching = False, building = False) : # -> dict, tuple, MoveAnimation
     pause_hover = searching or animating
 
     screen.fill(BACKGROUND_COLOR)
@@ -162,7 +187,7 @@ def draw(screen, pz, animating, sol, searching = False) : # -> dict, tuple, Move
     if animating != None : 
         if draw_anim(screen, animating) : 
             animating = None
-    buttons = draw_buttons(screen, searching, pause_hover, mouse_pos)
+    buttons = draw_buttons(screen, searching, building, pause_hover, mouse_pos)
     if sol == None : draw_text(screen, 0)
     else : draw_text(screen, sol.l)
     pygame.display.flip()

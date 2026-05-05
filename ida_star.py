@@ -5,14 +5,14 @@ INF = float("inf")
 OPPOSITE = {0:2, 1:3, 2:0, 3:1}
 
 # 6-6-3 PDB
-PATTERN_SET = ((1, 2, 5, 6, 9, 13),(3, 4, 7, 8, 11, 12),(10, 14, 15))
+DEFAULT_PATTERN_SET = ((1, 2, 5, 6, 9, 13),(3, 4, 7, 8, 11, 12),(10, 14, 15))
 # 5-5-5 : ((1,2,4,5,6), (3,7,8,10,11), (9,12,13,14,15))
 
-def ida_star(_pz) -> tuple :
+def ida_star(_pz, pattern_set = DEFAULT_PATTERN_SET) -> tuple :
     pz = copy.deepcopy(_pz)
 
     # load pdb (build if necessary)
-    pdb = manage_pdb.PDB(PATTERN_SET)
+    pdb = manage_pdb.PDB(pattern_set)
     if not pdb.check_file() :
         if not pdb.build() :
             raise RuntimeError("PDB build fail")
